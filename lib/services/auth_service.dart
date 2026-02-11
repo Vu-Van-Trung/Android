@@ -16,6 +16,12 @@ class AuthService {
       password: 'admin123',
       totpSecret: 'HXDMVJECJJWSRB3H',
     ),
+    const User(
+      username: 'user',
+      email: 'user@example.com',
+      password: 'user123',
+      totpSecret: 'KZXW6YTBON2XEZJO',
+    ),
   ];
 
   // Demo TOTP code (in production, would use real TOTP algorithm)

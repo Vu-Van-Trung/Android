@@ -1,0 +1,106 @@
+schema: spec-driven
+
+# Project context
+context: |
+  ## Loại ứng dụng
+  Ứng dụng nhắn tin và gọi video doanh nghiệp (tương tự Zalo, Microsoft Teams)
+  
+  ## Công nghệ sử dụng
+  - Framework: Flutter
+  - Ngôn ngữ: Dart
+  - Real-time communication: Socket.IO
+  - Authentication: Phone number based
+  - Biometric: Fingerprint & Face ID (iOS only for Face ID)
+  - Push notifications: Firebase Cloud Messaging (FCM)
+  - State management: Provider/Bloc (tùy chọn trong implementation)
+  - Local storage: SQLite/Hive cho cache và offline data
+  
+  ## Các chức năng chính
+  
+  ### 1. Đăng nhập & Đăng ký
+  - Đăng ký bằng số điện thoại với xác thực OTP
+  - Đăng nhập bằng số điện thoại với xác thực OTP
+  - Đăng nhập nhanh bằng vân tay (Android & iOS)
+  - Đăng nhập nhanh bằng Face ID (chỉ iOS, Android bỏ qua)
+  - Session management và auto-login
+  
+  ### 2. Tính năng Chat
+  - Chat 1-1 (chat đơn) real-time qua Socket.IO
+  - Chat nhóm với quản lý thành viên
+  - Gửi tin nhắn văn bản
+  - Gửi hình ảnh (upload và preview)
+  - Gửi file đính kèm (documents, PDF, etc.)
+  - Typing indicators (đang soạn tin...)
+  - Message reactions (like, love, etc.)
+  - Reply và forward tin nhắn
+  
+  ### 3. Quản lý Danh bạ
+  - Tìm kiếm đồng nghiệp/nhân viên qua số điện thoại
+  - Quét mã QR để kết bạn (tương tự Zalo)
+  - Tạo mã QR cá nhân
+  - Danh sách bạn bè/đồng nghiệp
+  - Sync danh bạ từ server
+  
+  ### 4. Thông báo Tin nhắn
+  - Push notification khi nhận tin nhắn mới (kể cả khi app đóng)
+  - App chạy background service để nhận tin nhắn real-time
+  - Màn hình thông báo KHÔNG hiển thị nội dung tin nhắn (chỉ hiện "Bạn có tin nhắn mới" để bảo mật)
+  - Badge count cho số tin nhắn chưa đọc
+  - In-app notifications
+  
+  ### 5. Trạng thái Tin nhắn
+  - Đã gửi (sent) - một tích xám
+  - Đã nhận (delivered) - hai tích xám
+  - Đã xem (seen/read) - hai tích xanh
+  - Real-time update trạng thái qua Socket.IO
+  
+  ### 6. Gọi Video (optional - có thể implement sau)
+  - Video call 1-1
+  - WebRTC integration
+  - Call notifications
+  
+  ## Convention & Best Practices
+  - Sử dụng clean architecture pattern
+  - Feature-first folder structure
+  - Naming convention: snake_case cho files, camelCase cho variables, PascalCase cho classes
+  - Internationalization (i18n) ready - hỗ trợ tiếng Việt và tiếng Anh
+  - Error handling với try-catch và proper error messages
+  - Logging cho debugging
+  - Code comments bằng tiếng Việt hoặc tiếng Anh
+  
+  ## Security & Privacy
+  - End-to-end encryption cho tin nhắn (optional nhưng recommended)
+  - Secure storage cho authentication tokens
+  - Không hiển thị nội dung tin nhắn trong push notifications
+  - Input validation và sanitization
+  
+  ## UI/UX Guidelines
+  - Material Design cho Android
+  - Cupertino Design cho iOS (hoặc unified design)
+  - Dark mode support
+  - Responsive design cho tablet
+  - Smooth animations và transitions
+  - Loading states và error states
+
+# Per-artifact rules
+rules:
+  proposal:
+    - Mô tả rõ ràng technical approach và architecture
+    - Liệt kê dependencies và packages cần thiết
+    - Xác định APIs và data models
+    - Bao gồm security considerations
+    - Đề xuất phân chia phases nếu dự án lớn
+  
+  tasks:
+    - Chia nhỏ tasks theo features độc lập
+    - Mỗi task không quá 4-6 giờ làm việc
+    - Ưu tiên implement core features trước (authentication, basic chat)
+    - Mark dependencies giữa các tasks
+    - Include testing tasks cho mỗi feature
+  
+  spec:
+    - Mô tả chi tiết data structures và models
+    - Định nghĩa rõ ràng API contracts (Socket.IO events, REST endpoints)
+    - Include error handling scenarios
+    - Specify state management approach
+    - Document screen flows và navigation

@@ -62,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
       _passwordController.text,
     );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success && result.requiresTOTP) {
@@ -74,7 +75,9 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
     } else if (!result.success) {
-      setState(() => _errorMessage = result.message);
+      if (mounted) {
+        setState(() => _errorMessage = result.message);
+      }
     }
   }
 

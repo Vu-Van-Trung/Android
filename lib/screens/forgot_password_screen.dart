@@ -52,15 +52,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final result =
         await _authService.requestPasswordReset(_emailController.text.trim());
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success) {
-      setState(() {
-        _sentEmail = _emailController.text.trim();
-        _currentStep = 1;
-      });
+      if (mounted) {
+        setState(() {
+          _sentEmail = _emailController.text.trim();
+          _currentStep = 1;
+        });
+      }
     } else {
-      setState(() => _errorMessage = result.message);
+      if (mounted) {
+        setState(() => _errorMessage = result.message);
+      }
     }
   }
 
@@ -77,15 +82,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     final result = await _authService.verifyResetCode(_codeController.text);
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success) {
-      setState(() => _currentStep = 2);
+      if (mounted) {
+        setState(() => _currentStep = 2);
+      }
     } else {
-      setState(() {
-        _errorMessage = result.message;
-        _codeController.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = result.message;
+          _codeController.clear();
+        });
+      }
     }
   }
 
@@ -108,6 +118,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final result =
         await _authService.resetPassword(_newPasswordController.text);
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success) {
@@ -124,7 +135,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       }
     } else {
-      setState(() => _errorMessage = result.message);
+      if (mounted) {
+        setState(() => _errorMessage = result.message);
+      }
     }
   }
 

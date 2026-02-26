@@ -3,7 +3,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../services/auth_service.dart';
 import '../widgets/gradient_background.dart';
 import '../widgets/glass_card.dart';
-import 'success_screen.dart';
+import 'home_screen.dart';
 
 class TOTPScreen extends StatefulWidget {
   final AuthService authService;
@@ -41,26 +41,33 @@ class _TOTPScreenState extends State<TOTPScreen>
   void _startTimer() {
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
+      // Check if widget is still mounted before calling setState
       if (!mounted) return false;
-      setState(() {
-        _remainingSeconds--;
-        if (_remainingSeconds <= 0) {
-          _remainingSeconds = 30;
-        }
-      });
-      return true;
+      
+      if (mounted) {
+        setState(() {
+          _remainingSeconds--;
+          if (_remainingSeconds <= 0) {
+            _remainingSeconds = 30;
+          }
+        });
+      }
+      return mounted; // Stop timer if widget is disposed
     });
   }
 
   @override
   void dispose() {
-    _codeController.dispose();
+    // Dispose controllers before calling super.dispose()
     _animationController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
   Future<void> _handleVerify() async {
-    if (_codeController.text.length != 6) {
+    if (!mounted) return;
+    final code = _codeController.text;
+    if (code.length != 6) {
       setState(() => _errorMessage = 'Vui lòng nhập đủ 6 số');
       return;
     }
@@ -70,8 +77,9 @@ class _TOTPScreenState extends State<TOTPScreen>
       _errorMessage = null;
     });
 
-    final result = await widget.authService.verifyTOTP(_codeController.text);
+    final result = await widget.authService.verifyTOTP(code);
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success) {
@@ -79,19 +87,18 @@ class _TOTPScreenState extends State<TOTPScreen>
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => const SuccessScreen(
-              title: 'Đăng nhập thành công!',
-              message: 'Chào mừng bạn đã quay trở lại',
-            ),
+            builder: (context) => HomeScreen(authService: widget.authService),
           ),
           (route) => false,
         );
       }
     } else {
-      setState(() {
-        _errorMessage = result.message;
-        _codeController.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = result.message;
+          _codeController.clear();
+        });
+      }
     }
   }
 
@@ -184,9 +191,11 @@ class _TOTPScreenState extends State<TOTPScreen>
                           color: Colors.white,
                         ),
                         onCompleted: (value) {
+                          if (!mounted) return;
                           _handleVerify();
                         },
                         onChanged: (value) {
+                          if (!mounted) return;
                           setState(() => _errorMessage = null);
                         },
                       ),

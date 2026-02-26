@@ -91,6 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text,
     );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (result.success && result.totpSecret != null) {
@@ -104,7 +105,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } else {
-      setState(() => _errorMessage = result.message);
+      if (mounted) {
+        setState(() => _errorMessage = result.message);
+      }
     }
   }
 

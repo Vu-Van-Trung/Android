@@ -32,10 +32,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    _codeController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    final codeController = _codeController;
     super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      codeController.dispose();
+    });
   }
 
   Future<void> _handleSendCode() async {

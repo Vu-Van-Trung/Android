@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../services/auth_service.dart';
@@ -20,6 +22,7 @@ class _TOTPScreenState extends State<TOTPScreen>
   bool _isLoading = false;
   String? _errorMessage;
   int _remainingSeconds = 30;
+  Timer? _timer;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -39,29 +42,31 @@ class _TOTPScreenState extends State<TOTPScreen>
   }
 
   void _startTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      // Check if widget is still mounted before calling setState
-      if (!mounted) return false;
-      
-      if (mounted) {
-        setState(() {
-          _remainingSeconds--;
-          if (_remainingSeconds <= 0) {
-            _remainingSeconds = 30;
-          }
-        });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
       }
-      return mounted; // Stop timer if widget is disposed
+      setState(() {
+        _remainingSeconds--;
+        if (_remainingSeconds <= 0) {
+          _remainingSeconds = 30;
+        }
+      });
     });
   }
 
   @override
   void dispose() {
     // Dispose controllers before calling super.dispose()
+    _timer?.cancel();
     _animationController.dispose();
-    _codeController.dispose();
+    final codeController = _codeController;
     super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      codeController.dispose();
+    });
   }
 
   Future<void> _handleVerify() async {

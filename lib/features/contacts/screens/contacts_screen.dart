@@ -3,6 +3,9 @@ import '../../../widgets/gradient_background.dart';
 import '../models/contact_model.dart';
 import '../data/demo_contacts.dart';
 import '../widgets/contact_list_item.dart';
+import '../../chat/models/conversation_model.dart';
+import '../../chat/data/demo_chats.dart';
+import '../../chat/screens/chat_detail_screen.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -49,13 +52,23 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void _handleContactTap(Contact contact) {
-    // Placeholder navigation - show snackbar for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Mở chat với ${contact.name}'),
-        backgroundColor: const Color(0xFF667EEA),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+    // Check if conversation exists in demo data
+    Conversation? existingConv;
+    try {
+      existingConv = demoConversations.firstWhere((c) => c.partner.id == contact.id);
+    } catch (_) {}
+
+    final conversation = existingConv ?? Conversation(
+      id: 'new_${contact.id}',
+      partner: contact,
+      messages: [],
+      unreadCount: 0,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatDetailScreen(conversation: conversation),
       ),
     );
   }

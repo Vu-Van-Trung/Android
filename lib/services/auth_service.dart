@@ -147,6 +147,20 @@ class AuthService {
     _currentUser = null;
   }
 
+  /// Update Profile
+  Future<bool> updateProfile(User updatedUser) async {
+    await Future.delayed(const Duration(milliseconds: 800));
+    _currentUser = updatedUser;
+    
+    // In a real app we'd also update the user in the database/backend
+    final index = _demoUsers.indexWhere((u) => u.username == updatedUser.username);
+    if (index >= 0) {
+      _demoUsers[index] = updatedUser;
+    }
+    
+    return true;
+  }
+
   /// Generate random secret key for TOTP
   String _generateSecretKey() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';

@@ -17,6 +17,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _usernameController;
   late final TextEditingController _emailController;
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _phoneController;
+  
+  DateTime? _selectedDate;
+  String? _selectedGender;
+  final List<String> _genders = ['Nam', 'Nữ', 'Khác'];
+
   bool _isLoading = false;
 
   @override
@@ -25,12 +32,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = widget.authService.currentUser;
     _usernameController = TextEditingController(text: user?.username ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
+    _fullNameController = TextEditingController(text: user?.fullName ?? '');
+    _phoneController = TextEditingController(text: user?.phoneNumber ?? '');
+    _selectedDate = user?.dateOfBirth;
+    _selectedGender = user?.gender;
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
+    _fullNameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -39,8 +52,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isLoading = true);
 
-    // Giả lập lưu dữ liệu
-    await Future.delayed(const Duration(milliseconds: 800));
+    final currentUser = widget.authService.currentUser;
+    if (currentUser != null) {
+      final updatedUser = currentUser.copyWith(
+        username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
+        fullName: _fullNameController.text.trim().isEmpty ? null : _fullNameController.text.trim(),
+        phoneNumber: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        dateOfBirth: _selectedDate,
+        gender: _selectedGender,
+      );
+
+      await widget.authService.updateProfile(updatedUser);
+    } else {
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
 
     setState(() => _isLoading = false);
 
@@ -115,6 +141,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+                      // Họ và tên
+                      TextFormField(
+                        controller: _fullNameController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Họ và tên',
+                          prefixIcon: Icon(
+                            Icons.badge_outlined,
+                            color: Color.fromRGBO(255, 255, 255, 0.6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       // Email
                       TextFormField(
                         controller: _emailController,
@@ -137,6 +176,87 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           }
                           return null;
                         },
+                      ),
+                      const SizedBox(height: 16),
+                      // Số điện thoại
+                      TextFormField(
+                        controller: _phoneController,
+                        style: const TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Số điện thoại',
+                          prefixIcon: Icon(
+                            Icons.phone_outlined,
+                            color: Color.fromRGBO(255, 255, 255, 0.6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Ngày sinh & Giới tính row
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: InkWell(
+                              onTap: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate ?? DateTime(2000),
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (date != null) {
+                                  setState(() => _selectedDate = date);
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Ngày sinh',
+                                  prefixIcon: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: Color.fromRGBO(255, 255, 255, 0.6),
+                                  ),
+                                ),
+                                child: Text(
+                                  _selectedDate != null
+                                      ? '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}'
+                                      : 'Chọn ngày',
+                                  style: TextStyle(
+                                    color: _selectedDate != null
+                                        ? Colors.white
+                                        : const Color.fromRGBO(255, 255, 255, 0.6),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: DropdownButtonFormField<String>(
+                              // ignore: deprecated_member_use
+                              value: _selectedGender,
+                              dropdownColor: const Color(0xFF1A1A2E),
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                labelText: 'Giới tính',
+                                prefixIcon: Icon(
+                                  Icons.people_outline,
+                                  color: Color.fromRGBO(255, 255, 255, 0.6),
+                                ),
+                              ),
+                              items: _genders.map((gender) {
+                                return DropdownMenuItem(
+                                  value: gender,
+                                  child: Text(gender),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() => _selectedGender = value);
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 32),
                       // Nút lưu

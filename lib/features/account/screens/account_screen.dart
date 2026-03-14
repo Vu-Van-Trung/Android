@@ -21,82 +21,86 @@ class AccountScreen extends StatelessWidget {
     return GradientBackground(
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               // Profile Header
-              ProfileHeader(
-                username: user?.username ?? 'User',
-                email: user?.email ?? '',
-              ),
+              if (user != null)
+                ProfileHeader(
+                  user: user,
+                  authService: authService,
+                ),
               const SizedBox(height: 32),
               // Menu Card
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(255, 255, 255, 0.06),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color.fromRGBO(255, 255, 255, 0.1),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(255, 255, 255, 0.06),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color.fromRGBO(255, 255, 255, 0.1),
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Column(
-                  children: [
-                    // Chỉnh sửa hồ sơ
-                    AccountMenuItem(
-                      icon: Icons.person_outline,
-                      label: 'Chỉnh sửa hồ sơ',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditProfileScreen(
-                              authService: authService,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Column(
+                    children: [
+                      // Chỉnh sửa hồ sơ
+                      AccountMenuItem(
+                        icon: Icons.person_outline,
+                        label: 'Chỉnh sửa hồ sơ',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProfileScreen(
+                                authService: authService,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    // Đổi mật khẩu
-                    AccountMenuItem(
-                      icon: Icons.lock_outline,
-                      label: 'Đổi mật khẩu',
-                      iconColor: const Color(0xFF764BA2),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangePasswordScreen(
-                              authService: authService,
+                          );
+                        },
+                      ),
+                      // Đổi mật khẩu
+                      AccountMenuItem(
+                        icon: Icons.lock_outline,
+                        label: 'Đổi mật khẩu',
+                        iconColor: const Color(0xFF764BA2),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangePasswordScreen(
+                                authService: authService,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    // Cài đặt
-                    AccountMenuItem(
-                      icon: Icons.settings_outlined,
-                      label: 'Cài đặt',
-                      iconColor: const Color(0xFF4ECDC4),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    // Đăng xuất
-                    AccountMenuItem(
-                      icon: Icons.logout,
-                      label: 'Đăng xuất',
-                      isDanger: true,
-                      showDivider: false,
-                      onTap: () => _showLogoutDialog(context),
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                      // Cài đặt
+                      AccountMenuItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Cài đặt',
+                        iconColor: const Color(0xFF4ECDC4),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      // Đăng xuất
+                      AccountMenuItem(
+                        icon: Icons.logout,
+                        label: 'Đăng xuất',
+                        isDanger: true,
+                        showDivider: false,
+                        onTap: () => _showLogoutDialog(context),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

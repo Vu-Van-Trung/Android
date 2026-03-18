@@ -4,6 +4,7 @@ import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/chat_input_field.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChatDetailScreen extends StatefulWidget {
   final Conversation conversation;
@@ -19,14 +20,51 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSending = false;
+  late IO.Socket socket;
+
+  // Dùng ID giả lập để test. Sau này lấy từ AuthService.
+  final String myUserId = "user_A"; 
+  late String receiverId;
 
   @override
   void initState() {
     super.initState();
-    // Copy list to allow local modification for demo
     _messages = List.from(widget.conversation.messages);
-    
-    // Auto mark as read simulation
+    receiverId = widget.conversation.partner.name; // Lấy tên đối tác làm ID tạm thời để test
+
+    // 1. Khởi tạo kết nối Socket.IO
+    // Dùng localhost cho Web, 10.0.2.2 cho Android Emulator
+    socket = IO.io('http://localhost:3000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    });
+
+    // Bắt sự kiện kết nối thành công
+    socket.onConnect((_) {
+      print('====> KẾT NỐI SOCKET THÀNH CÔNG <====');
+      socket.emit('join', myUserId);
+    });
+
+    // Lắng nghe khi có tin nhắn từ máy khác gửi tới
+    socket.on('receiveMessage', (data) {
+      if (mounted) {
+        setState(() {
+          _messages.insert(
+            0,
+            Message(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: data['text'],
+              timestamp: DateTime.now(),
+              isSender: false, // Tin nhắn của người khác
+              isRead: true,
+            ),
+          );
+        });
+        _scrollToBottom();
+      }
+    });
+
+    // Các tin nhắn mồi (mock) trước đó
     if (_messages.any((m) => !m.isSender && !m.isRead)) {
       _messages = _messages.map((m) {
         if (!m.isSender && !m.isRead) {
@@ -45,6 +83,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    socket.disconnect();
+    socket.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -60,32 +100,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  void _sendMessage() async {
+  void _sendMessage() {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _isSending = true;
+    // 2. Gửi sự kiện lên Server Node.js
+    socket.emit('sendMessage', {
+      'sender': myUserId,
+      'receiver': receiverId,
+      'text': text,
     });
 
-    // Clear input immediately for better UX
+    // Xóa input
     _messageController.clear();
-    
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
 
+    // Hiển thị ngay lên màn hình của mình
     final newMessage = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       text: text,
       timestamp: DateTime.now(),
       isSender: true,
-      isRead: false, // Not read by partner yet
+      isRead: false,
     );
 
     setState(() {
-      // Add to beginning since ListView is reversed
       _messages.insert(0, newMessage);
-      _isSending = false;
     });
 
     _scrollToBottom();

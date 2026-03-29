@@ -21,6 +21,13 @@ class AccountMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDanger 
+        ? Colors.redAccent 
+        : (isDark ? Colors.white : Colors.black87);
+    final chevronColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.3) : const Color.fromRGBO(0, 0, 0, 0.3);
+    final dividerColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.08) : const Color.fromRGBO(0, 0, 0, 0.08);
+
     return Column(
       children: [
         Material(
@@ -38,9 +45,7 @@ class AccountMenuItem extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: (isDanger
-                              ? Colors.red
-                              : iconColor)
+                      color: (isDanger ? Colors.red : iconColor)
                           .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -58,17 +63,15 @@ class AccountMenuItem extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: isDanger
-                            ? Colors.redAccent
-                            : Colors.white,
+                        color: textColor,
                       ),
                     ),
                   ),
                   // Chevron
                   if (!isDanger)
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
-                      color: Color.fromRGBO(255, 255, 255, 0.3),
+                      color: chevronColor,
                       size: 22,
                     ),
                 ],
@@ -77,8 +80,8 @@ class AccountMenuItem extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
-            color: Color.fromRGBO(255, 255, 255, 0.08),
+          Divider(
+            color: dividerColor,
             height: 1,
           ),
       ],

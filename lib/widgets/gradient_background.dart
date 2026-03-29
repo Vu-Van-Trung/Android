@@ -8,12 +8,14 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Stack(
       children: [
         // Base gradient
         Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0F0F23),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
           ),
         ),
 
@@ -24,11 +26,13 @@ class GradientBackground extends StatelessWidget {
           child: Container(
             width: 300,
             height: 300,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  Color.fromRGBO(102, 126, 234, 0.3),
+                  isDark 
+                      ? const Color.fromRGBO(102, 126, 234, 0.3)
+                      : const Color.fromRGBO(102, 126, 234, 0.15),
                   Colors.transparent,
                 ],
               ),
@@ -41,11 +45,13 @@ class GradientBackground extends StatelessWidget {
           child: Container(
             width: 400,
             height: 400,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  Color.fromRGBO(118, 75, 162, 0.3),
+                  isDark
+                      ? const Color.fromRGBO(118, 75, 162, 0.3)
+                      : const Color.fromRGBO(118, 75, 162, 0.15),
                   Colors.transparent,
                 ],
               ),
@@ -58,11 +64,13 @@ class GradientBackground extends StatelessWidget {
           child: Container(
             width: 200,
             height: 200,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  Color.fromRGBO(240, 147, 251, 0.2),
+                  isDark
+                      ? const Color.fromRGBO(240, 147, 251, 0.2)
+                      : const Color.fromRGBO(240, 147, 251, 0.1),
                   Colors.transparent,
                 ],
               ),

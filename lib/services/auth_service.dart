@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'api_client.dart';
 import '../models/user.dart';
 
 /// Authentication Service - handles login, registration, password reset
@@ -33,30 +35,45 @@ class AuthService {
 
   /// Login with username/email and password
   Future<LoginResult> login(String usernameOrEmail, String password) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final response = await ApiClient().post('/api/login', {
+        'phone': usernameOrEmail,
+        'password': password,
+      });
 
-    final user = _demoUsers.firstWhere(
-      (u) =>
-          (u.username == usernameOrEmail || u.email == usernameOrEmail) &&
-          u.password == password,
-      orElse: () =>
-          const User(username: '', email: '', password: '', totpSecret: ''),
-    );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final token = data['access_token'];
+        final userId = data['user_id']?.toString() ?? 'unknown_id';
+        if (token != null) {
+          ApiClient().setTokenAndUserId(token, userId);
+          
+          // Generate dummy user as API does not return profile
+          _currentUser = User(
+            username: usernameOrEmail,
+            email: '$usernameOrEmail@domain.com',
+            password: password,
+            totpSecret: 'DUMMY',
+          );
 
-    if (user.username.isEmpty) {
+          return LoginResult(
+            success: true,
+            message: 'Đăng nhập thành công',
+            requiresTOTP: false, 
+          );
+        }
+      }
+      
       return LoginResult(
         success: false,
-        message: 'Tên đăng nhập hoặc mật khẩu không đúng',
+        message: 'Đăng nhập thất bại: ${response.statusCode}',
+      );
+    } catch (e) {
+      return LoginResult(
+        success: false,
+        message: 'Không thể kết nối Server: $e',
       );
     }
-
-    _currentUser = user;
-    return LoginResult(
-      success: true,
-      message: 'Đăng nhập thành công, vui lòng xác thực TOTP',
-      requiresTOTP: true,
-    );
   }
 
   /// Verify TOTP code
@@ -77,28 +94,40 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    try {
+      // Dùng tham số email như phone theo design API của user.
+      final response = await ApiClient().post('/api/register', {
+        'phone': email, 
+        'password': password,
+        'full_name': username,
+      });
 
-    // Check if user exists
-    final exists = _demoUsers.any(
-      (u) => u.username == username || u.email == email,
-    );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return RegisterResult(
+          success: true,
+          message: 'Đăng ký thành công',
+          totpSecret: _generateSecretKey(),
+        );
+      }
+      
+      String errorMsg = 'Lỗi đăng ký: ${response.statusCode}';
+      try {
+        final data = jsonDecode(response.body);
+        if (data['detail'] != null) {
+          errorMsg = data['detail'];
+        }
+      } catch (_) {}
 
-    if (exists) {
       return RegisterResult(
         success: false,
-        message: 'Tên đăng nhập hoặc email đã tồn tại',
+        message: errorMsg,
+      );
+    } catch (e) {
+      return RegisterResult(
+        success: false,
+        message: 'Lỗi kết nối: $e',
       );
     }
-
-    // Generate secret key
-    final secretKey = _generateSecretKey();
-
-    return RegisterResult(
-      success: true,
-      message: 'Đăng ký thành công',
-      totpSecret: secretKey,
-    );
   }
 
   /// Request password reset

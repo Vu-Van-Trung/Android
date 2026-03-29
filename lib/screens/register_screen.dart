@@ -184,22 +184,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Email field
+                      // Phone field (formerly Email)
                       TextFormField(
                         controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        keyboardType: TextInputType.phone,
                         decoration: const InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'Nhập địa chỉ email',
-                          prefixIcon: Icon(Icons.email_outlined),
+                          labelText: 'Số điện thoại',
+                          hintText: 'Nhập số điện thoại (10-15 số)',
+                          prefixIcon: Icon(Icons.phone_outlined),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Vui lòng nhập email';
+                            return 'Vui lòng nhập số điện thoại';
                           }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                              .hasMatch(value)) {
-                            return 'Email không hợp lệ';
+                          if (!RegExp(r'^\d{10,15}$').hasMatch(value)) {
+                            return 'Số điện thoại không hợp lệ (10-15 số)';
                           }
                           return null;
                         },

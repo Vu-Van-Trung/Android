@@ -52,8 +52,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
 
-    // Giả lập đổi mật khẩu
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Actually update the password via AuthService
+    if (user != null) {
+      final updatedUser = user.copyWith(password: _newPasswordController.text);
+      await widget.authService.updateProfile(updatedUser);
+    } else {
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
 
     setState(() => _isLoading = false);
 
@@ -71,12 +76,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.6) : const Color.fromRGBO(0, 0, 0, 0.6);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đổi mật khẩu'),
+        title: Text('Đổi mật khẩu', style: TextStyle(color: textColor)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: GradientBackground(
         child: SafeArea(
@@ -89,20 +99,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Đổi mật khẩu',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Nhập mật khẩu hiện tại và mật khẩu mới',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color.fromRGBO(255, 255, 255, 0.6),
+                          color: subtitleColor,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -110,19 +120,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       TextFormField(
                         controller: _currentPasswordController,
                         obscureText: !_showCurrentPassword,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           labelText: 'Mật khẩu hiện tại',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: Color.fromRGBO(255, 255, 255, 0.6),
+                            color: subtitleColor,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _showCurrentPassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: const Color.fromRGBO(255, 255, 255, 0.6),
+                              color: subtitleColor,
                             ),
                             onPressed: () {
                               setState(() {
@@ -143,19 +153,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       TextFormField(
                         controller: _newPasswordController,
                         obscureText: !_showNewPassword,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           labelText: 'Mật khẩu mới',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.lock_reset,
-                            color: Color.fromRGBO(255, 255, 255, 0.6),
+                            color: subtitleColor,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _showNewPassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: const Color.fromRGBO(255, 255, 255, 0.6),
+                              color: subtitleColor,
                             ),
                             onPressed: () {
                               setState(() {
@@ -179,19 +189,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: !_showConfirmPassword,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           labelText: 'Xác nhận mật khẩu mới',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: Color.fromRGBO(255, 255, 255, 0.6),
+                            color: subtitleColor,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _showConfirmPassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: const Color.fromRGBO(255, 255, 255, 0.6),
+                              color: subtitleColor,
                             ),
                             onPressed: () {
                               setState(() {

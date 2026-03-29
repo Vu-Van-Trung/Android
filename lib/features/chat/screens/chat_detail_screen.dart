@@ -4,6 +4,8 @@ import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/chat_input_field.dart';
+import '../../../services/chat_service.dart';
+import '../../../services/api_client.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChatDetailScreen extends StatefulWidget {
@@ -16,14 +18,16 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
+  final ChatService _chatService = ChatService();
   late List<Message> _messages;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isSending = false;
+  bool _isLoadingMessages = true;
   late IO.Socket socket;
 
-  // Dùng ID giả lập để test. Sau này lấy từ AuthService.
-  final String myUserId = "user_A"; 
+  // Lấy User ID từ session ApiClient đã login
+  final String myUserId = ApiClient().userId ?? "anonymous"; 
   late String receiverId;
 
   @override
@@ -32,9 +36,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _messages = List.from(widget.conversation.messages);
     receiverId = widget.conversation.partner.name; // Lấy tên đối tác làm ID tạm thời để test
 
+    _loadMessages();
+
     // 1. Khởi tạo kết nối Socket.IO
     // Dùng localhost cho Web, 10.0.2.2 cho Android Emulator
-    socket = IO.io('http://localhost:3000', <String, dynamic>{
+    socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
     });
@@ -100,34 +106,47 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  void _sendMessage() {
+  Future<void> _loadMessages() async {
+    final msgs = await _chatService.getMessages(widget.conversation.id);
+    if (mounted) {
+      setState(() {
+        // Reverse array as UI uses `reverse: true`
+        _messages = msgs.reversed.toList();
+        _isLoadingMessages = false;
+      });
+    }
+  }
+
+  void _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    // 2. Gửi sự kiện lên Server Node.js
-    socket.emit('sendMessage', {
-      'sender': myUserId,
-      'receiver': receiverId,
-      'text': text,
-    });
+    setState(() => _isSending = true);
 
     // Xóa input
     _messageController.clear();
 
-    // Hiển thị ngay lên màn hình của mình
-    final newMessage = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: text,
-      timestamp: DateTime.now(),
-      isSender: true,
-      isRead: false,
-    );
+    // 1. Call REST Server
+    final newMessage = await _chatService.sendMessage(widget.conversation.id, text);
 
-    setState(() {
-      _messages.insert(0, newMessage);
-    });
+    if (newMessage != null && mounted) {
+      // 2. Gửi sự kiện lên Server Node.js (Fallback Socket)
+      socket.emit('sendMessage', {
+        'sender': myUserId,
+        'receiver': receiverId,
+        'text': text,
+      });
 
-    _scrollToBottom();
+      setState(() {
+        // Insert at 0 because ListView is reversed
+        _messages.insert(0, newMessage);
+      });
+      _scrollToBottom();
+    }
+    
+    if (mounted) {
+      setState(() => _isSending = false);
+    }
   }
 
   @override
@@ -221,20 +240,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                reverse: true, // Show bottom to top
-                padding: const EdgeInsets.only(top: 16, bottom: 8),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  // For reverse ListView, index 0 is at bottom
-                  final message = _messages[index];
-                  return MessageBubble(
-                    message: message,
-                    partner: partner,
-                  );
-                },
-              ),
+              child: _isLoadingMessages
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true, // Show bottom to top
+                      padding: const EdgeInsets.only(top: 16, bottom: 8),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        // For reverse ListView, index 0 is at bottom
+                        final message = _messages[index];
+                        return MessageBubble(
+                          message: message,
+                          partner: partner,
+                        );
+                      },
+                    ),
             ),
             ChatInputField(
               controller: _messageController,

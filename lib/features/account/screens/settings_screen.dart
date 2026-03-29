@@ -1,136 +1,147 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/gradient_background.dart';
+import '../../../services/settings_service.dart';
 
 /// Màn hình cài đặt ứng dụng
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  // Thông báo
-  bool _messageNotification = true;
-  bool _soundNotification = true;
-  bool _vibration = true;
-
-  // Bảo mật
-  bool _fingerprintLogin = false;
-  bool _twoFactorAuth = true;
-
-  // Giao diện
-  bool _darkMode = true;
-
-  @override
   Widget build(BuildContext context) {
+    // Determine current theme colors
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.5) : const Color.fromRGBO(0, 0, 0, 0.5);
+    final borderColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.1) : const Color.fromRGBO(0, 0, 0, 0.1);
+    final cardColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.06) : const Color.fromRGBO(0, 0, 0, 0.04);
+    final dividerColor = isDark ? const Color.fromRGBO(255, 255, 255, 0.08) : const Color.fromRGBO(0, 0, 0, 0.06);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài đặt'),
+        title: Text('Cài đặt', style: TextStyle(color: textColor)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: GradientBackground(
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            children: [
-              // === Thông báo ===
-              _buildSectionHeader('Thông báo', Icons.notifications_outlined),
-              const SizedBox(height: 8),
-              _buildSettingsCard([
-                _buildSwitchTile(
-                  icon: Icons.message_outlined,
-                  title: 'Thông báo tin nhắn',
-                  subtitle: 'Nhận thông báo khi có tin nhắn mới',
-                  value: _messageNotification,
-                  onChanged: (val) =>
-                      setState(() => _messageNotification = val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.volume_up_outlined,
-                  title: 'Âm thanh thông báo',
-                  subtitle: 'Phát âm thanh khi nhận thông báo',
-                  value: _soundNotification,
-                  onChanged: (val) =>
-                      setState(() => _soundNotification = val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.vibration,
-                  title: 'Rung',
-                  subtitle: 'Rung khi nhận thông báo',
-                  value: _vibration,
-                  onChanged: (val) => setState(() => _vibration = val),
-                ),
-              ]),
-              const SizedBox(height: 24),
+          child: ListenableBuilder(
+            listenable: SettingsService(),
+            builder: (context, _) {
+              final settings = SettingsService();
+              return ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                children: [
+                  // === Thông báo ===
+                  _buildSectionHeader('Thông báo', Icons.notifications_outlined, subtitleColor),
+                  const SizedBox(height: 8),
+                  _buildSettingsCard(cardColor, borderColor, [
+                    _buildSwitchTile(
+                      icon: Icons.message_outlined,
+                      title: 'Thông báo tin nhắn',
+                      subtitle: 'Nhận thông báo khi có tin nhắn mới',
+                      value: settings.messageNotification,
+                      onChanged: (val) => settings.updateMessageNotification(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                    _buildDivider(dividerColor),
+                    _buildSwitchTile(
+                      icon: Icons.volume_up_outlined,
+                      title: 'Âm thanh thông báo',
+                      subtitle: 'Phát âm thanh khi nhận thông báo',
+                      value: settings.soundNotification,
+                      onChanged: (val) => settings.updateSoundNotification(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                    _buildDivider(dividerColor),
+                    _buildSwitchTile(
+                      icon: Icons.vibration,
+                      title: 'Rung',
+                      subtitle: 'Rung khi nhận thông báo',
+                      value: settings.vibration,
+                      onChanged: (val) => settings.updateVibration(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                  ]),
+                  const SizedBox(height: 24),
 
-              // === Bảo mật ===
-              _buildSectionHeader('Bảo mật', Icons.shield_outlined),
-              const SizedBox(height: 8),
-              _buildSettingsCard([
-                _buildSwitchTile(
-                  icon: Icons.fingerprint,
-                  title: 'Đăng nhập bằng vân tay',
-                  subtitle: 'Sử dụng vân tay để mở khóa ứng dụng',
-                  value: _fingerprintLogin,
-                  onChanged: (val) =>
-                      setState(() => _fingerprintLogin = val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.security,
-                  title: 'Xác thực hai bước (TOTP)',
-                  subtitle: 'Bảo vệ tài khoản bằng mã xác thực',
-                  value: _twoFactorAuth,
-                  onChanged: (val) =>
-                      setState(() => _twoFactorAuth = val),
-                ),
-              ]),
-              const SizedBox(height: 24),
+                  // === Bảo mật ===
+                  _buildSectionHeader('Bảo mật', Icons.shield_outlined, subtitleColor),
+                  const SizedBox(height: 8),
+                  _buildSettingsCard(cardColor, borderColor, [
+                    _buildSwitchTile(
+                      icon: Icons.fingerprint,
+                      title: 'Đăng nhập bằng vân tay',
+                      subtitle: 'Sử dụng vân tay để mở khóa ứng dụng',
+                      value: settings.fingerprintLogin,
+                      onChanged: (val) => settings.updateFingerprintLogin(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                    _buildDivider(dividerColor),
+                    _buildSwitchTile(
+                      icon: Icons.security,
+                      title: 'Xác thực hai bước (TOTP)',
+                      subtitle: 'Bảo vệ tài khoản bằng mã xác thực',
+                      value: settings.twoFactorAuth,
+                      onChanged: (val) => settings.updateTwoFactorAuth(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                  ]),
+                  const SizedBox(height: 24),
 
-              // === Giao diện ===
-              _buildSectionHeader('Giao diện', Icons.palette_outlined),
-              const SizedBox(height: 8),
-              _buildSettingsCard([
-                _buildSwitchTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: 'Chế độ tối',
-                  subtitle: 'Sử dụng giao diện tối',
-                  value: _darkMode,
-                  onChanged: (val) => setState(() => _darkMode = val),
-                ),
-              ]),
-              const SizedBox(height: 24),
+                  // === Giao diện ===
+                  _buildSectionHeader('Giao diện', Icons.palette_outlined, subtitleColor),
+                  const SizedBox(height: 8),
+                  _buildSettingsCard(cardColor, borderColor, [
+                    _buildSwitchTile(
+                      icon: Icons.dark_mode_outlined,
+                      title: 'Chế độ tối',
+                      subtitle: 'Sử dụng giao diện tối',
+                      value: settings.darkMode,
+                      onChanged: (val) => settings.updateDarkMode(val),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                  ]),
+                  const SizedBox(height: 24),
 
-              // === Thông tin ứng dụng ===
-              _buildSectionHeader('Thông tin', Icons.info_outline),
-              const SizedBox(height: 8),
-              _buildSettingsCard([
-                _buildInfoTile(
-                  icon: Icons.apps,
-                  title: 'Phiên bản',
-                  value: 'v1.0.0',
-                ),
-                _buildDivider(),
-                _buildInfoTile(
-                  icon: Icons.code,
-                  title: 'Build',
-                  value: '2026.03.14',
-                ),
-              ]),
-              const SizedBox(height: 32),
-            ],
+                  // === Thông tin ứng dụng ===
+                  _buildSectionHeader('Thông tin', Icons.info_outline, subtitleColor),
+                  const SizedBox(height: 8),
+                  _buildSettingsCard(cardColor, borderColor, [
+                    _buildInfoTile(
+                      icon: Icons.apps,
+                      title: 'Phiên bản',
+                      value: 'v1.0.0',
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                    _buildDivider(dividerColor),
+                    _buildInfoTile(
+                      icon: Icons.code,
+                      title: 'Build',
+                      value: '2026.03.14',
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                    ),
+                  ]),
+                  const SizedBox(height: 32),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(String title, IconData icon, Color subtitleColor) {
     return Row(
       children: [
         Icon(
@@ -141,10 +152,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color.fromRGBO(255, 255, 255, 0.5),
+            color: subtitleColor,
             letterSpacing: 0.5,
           ),
         ),
@@ -152,14 +163,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingsCard(List<Widget> children) {
+  Widget _buildSettingsCard(Color cardColor, Color borderColor, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color.fromRGBO(255, 255, 255, 0.06),
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color.fromRGBO(255, 255, 255, 0.1),
-        ),
+        border: Border.all(color: borderColor),
       ),
       child: Column(children: children),
     );
@@ -171,6 +180,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required Color textColor,
+    required Color subtitleColor,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -192,18 +203,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Color.fromRGBO(255, 255, 255, 0.5),
+                    color: subtitleColor,
                   ),
                 ),
               ],
@@ -214,8 +225,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: onChanged,
             activeThumbColor: const Color(0xFF667EEA),
             activeTrackColor: const Color(0xFF667EEA).withValues(alpha: 0.3),
-            inactiveThumbColor: const Color.fromRGBO(255, 255, 255, 0.4),
-            inactiveTrackColor: const Color.fromRGBO(255, 255, 255, 0.1),
+            inactiveThumbColor: subtitleColor,
+            inactiveTrackColor: subtitleColor.withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -226,6 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required String title,
     required String value,
+    required Color textColor,
+    required Color subtitleColor,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -244,18 +257,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: Colors.white,
+                color: textColor,
               ),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color.fromRGBO(255, 255, 255, 0.5),
+              color: subtitleColor,
             ),
           ),
         ],
@@ -263,11 +276,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+  Widget _buildDivider(Color dividerColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Divider(
-        color: Color.fromRGBO(255, 255, 255, 0.08),
+        color: dividerColor,
         height: 1,
       ),
     );

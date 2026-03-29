@@ -5,6 +5,7 @@ import '../widgets/glass_card.dart';
 import 'totp_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -65,16 +66,27 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (result.success && result.requiresTOTP) {
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TOTPScreen(authService: _authService),
-          ),
-        );
+    if (result.success) {
+      if (result.requiresTOTP) {
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TOTPScreen(authService: _authService),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(authService: _authService),
+            ),
+          );
+        }
       }
-    } else if (!result.success) {
+    } else {
       if (mounted) {
         setState(() => _errorMessage = result.message);
       }
@@ -130,17 +142,21 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 16),
                         ],
 
-                        // Username field
+                        // Phone field
                         TextFormField(
                           controller: _usernameController,
+                          keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
-                            labelText: 'Tên đăng nhập',
-                            hintText: 'Nhập tên đăng nhập',
-                            prefixIcon: Icon(Icons.person_outline),
+                            labelText: 'Số điện thoại',
+                            hintText: 'Nhập số điện thoại (10-15 số)',
+                            prefixIcon: Icon(Icons.phone_outlined),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Vui lòng nhập tên đăng nhập';
+                              return 'Vui lòng nhập số điện thoại';
+                            }
+                            if (!RegExp(r'^\d{10,15}$').hasMatch(value)) {
+                              return 'Số điện thoại không hợp lệ (10-15 số)';
                             }
                             return null;
                           },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/gradient_background.dart';
 import '../models/conversation_model.dart';
-import '../data/demo_chats.dart';
+import '../../../services/chat_service.dart';
 import '../widgets/chat_list_item.dart';
 import 'chat_detail_screen.dart';
 
@@ -13,15 +13,30 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  final List<Conversation> _conversations = demoConversations;
+  final ChatService _chatService = ChatService();
+  List<Conversation> _conversations = [];
   List<Conversation> _filteredConversations = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredConversations = List.from(_conversations);
+    _loadConversations();
+  }
+
+  Future<void> _loadConversations() async {
+    setState(() { _isLoading = true; });
+    final convs = await _chatService.getConversations();
+    if (mounted) {
+      setState(() {
+        _conversations = convs;
+        _filteredConversations = List.from(_conversations);
+        _isLoading = false;
+        _filterConversations(_searchQuery); // apply active filter if any
+      });
+    }
   }
 
   @override
@@ -50,7 +65,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       MaterialPageRoute(
         builder: (context) => ChatDetailScreen(conversation: conversation),
       ),
-    );
+    ).then((_) => _loadConversations());
   }
 
   @override

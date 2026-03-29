@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../widgets/gradient_background.dart';
 import '../models/conversation_model.dart';
 import '../../../services/chat_service.dart';
+import '../../../services/socket_service.dart';
+import '../models/message_model.dart';
 import '../widgets/chat_list_item.dart';
 import 'chat_detail_screen.dart';
 
@@ -19,11 +22,49 @@ class _ChatListScreenState extends State<ChatListScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
+  StreamSubscription<Map<String, dynamic>>? _socketSub;
 
   @override
   void initState() {
     super.initState();
     _loadConversations();
+    // Live preview: update conversation last message without full reload
+    _socketSub = SocketService().onMessage.listen(_onNewSocketMessage);
+  }
+
+  void _onNewSocketMessage(Map<String, dynamic> data) {
+    final convId = data['conversation_id']?.toString();
+    if (convId == null || !mounted) return;
+
+    final text = (data['content'] ?? data['text'] ?? '').toString();
+    if (text.isEmpty) return;
+
+    setState(() {
+      final idx = _conversations.indexWhere((c) => c.id == convId);
+      if (idx != -1) {
+        final updated = Conversation(
+          id: _conversations[idx].id,
+          partner: _conversations[idx].partner,
+          unreadCount: _conversations[idx].unreadCount + 1,
+          messages: [
+            Message(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: text,
+              timestamp: DateTime.now(),
+              isSender: false,
+            ),
+            ..._conversations[idx].messages,
+          ],
+        );
+        _conversations
+          ..removeAt(idx)
+          ..insert(0, updated);
+        _filterConversations(_searchQuery);
+      } else {
+        // Unknown conv — trigger full reload
+        _loadConversations();
+      }
+    });
   }
 
   Future<void> _loadConversations() async {
@@ -41,6 +82,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   void dispose() {
+    _socketSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -74,9 +116,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            // Search bar
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: TextField(
                 controller: _searchController,
                 onChanged: _filterConversations,
@@ -84,10 +125,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm tin nhắn...',
                   hintStyle: const TextStyle(color: Color.fromRGBO(255, 255, 255, 0.4)),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: Color.fromRGBO(255, 255, 255, 0.6),
-                  ),
+                  prefixIcon: const Icon(Icons.search, color: Color.fromRGBO(255, 255, 255, 0.6)),
                   filled: true,
                   fillColor: const Color.fromRGBO(255, 255, 255, 0.08),
                   border: OutlineInputBorder(
@@ -97,10 +135,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(
-                            Icons.clear,
-                            color: Color.fromRGBO(255, 255, 255, 0.6),
-                          ),
+                          icon: const Icon(Icons.clear, color: Color.fromRGBO(255, 255, 255, 0.6)),
                           onPressed: () {
                             _searchController.clear();
                             _filterConversations('');
@@ -110,9 +145,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               ),
             ),
-            // Chat list
             Expanded(
-              child: _buildChatList(),
+              child: RefreshIndicator(
+                onRefresh: _loadConversations,
+                color: const Color(0xFF667EEA),
+                child: _buildChatList(),
+              ),
             ),
           ],
         ),

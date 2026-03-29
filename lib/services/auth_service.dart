@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'api_client.dart';
 import '../models/user.dart';
 
@@ -174,20 +176,44 @@ class AuthService {
   /// Logout
   void logout() {
     _currentUser = null;
+    ApiClient().clearToken();
   }
 
   /// Update Profile
   Future<bool> updateProfile(User updatedUser) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    _currentUser = updatedUser;
-    
-    // In a real app we'd also update the user in the database/backend
-    final index = _demoUsers.indexWhere((u) => u.username == updatedUser.username);
-    if (index >= 0) {
-      _demoUsers[index] = updatedUser;
+    try {
+      final fields = <String, String>{};
+      if (updatedUser.fullName != null && updatedUser.fullName!.isNotEmpty) {
+        fields['full_name'] = updatedUser.fullName!;
+      }
+
+      File? avatarFile;
+      if (updatedUser.avatarPath != null && updatedUser.avatarPath!.isNotEmpty) {
+        avatarFile = File(updatedUser.avatarPath!);
+      }
+
+      final response = await ApiClient().putMultipart(
+        '/api/users/profile',
+        fields: fields,
+        file: avatarFile,
+        fileField: 'avatar',
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final newAvatarUrl = data['avatarUrl'];
+        // Update current user
+        _currentUser = updatedUser;
+        // If we want to store the URL, we can use avatarPath temporarily 
+        if (newAvatarUrl != null) {
+          _currentUser = updatedUser.copyWith(avatarPath: newAvatarUrl);
+        }
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error updating profile: $e');
     }
-    
-    return true;
+    return false;
   }
 
   /// Generate random secret key for TOTP

@@ -1,27 +1,15 @@
 import 'dart:async';
-
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-@pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await Firebase.initializeApp();
-    debugPrint('Background FCM: ${message.messageId}');
-  } catch (e) {
-    debugPrint('Background FCM init skipped: $e');
-  }
-}
-
+/// PushNotificationService: chạy mà không cần Firebase.
+/// Streams được HomeScreen lắng nghe để hiển thị overlay notification.
+/// Khi tích hợp FCM sau này, chỉ cần thêm logic vào init().
 class PushNotificationService {
   static final PushNotificationService _instance = PushNotificationService._internal();
 
   factory PushNotificationService() => _instance;
 
   PushNotificationService._internal();
-
-  bool _initialized = false;
 
   final _foregroundController = StreamController<Map<String, dynamic>>.broadcast();
   final _tapController = StreamController<Map<String, dynamic>>.broadcast();
@@ -30,57 +18,38 @@ class PushNotificationService {
   Stream<Map<String, dynamic>> get onNotificationTap => _tapController.stream;
 
   Future<void> init() async {
-    if (_initialized) return;
+    // Firebase Cloud Messaging is not configured yet.
+    // This service acts as a stub so HomeScreen compiles and runs.
+    // When FCM is set up, add firebase_core + firebase_messaging packages
+    // and uncomment the FCM logic below.
+    debugPrint('PushNotificationService: stub mode (Firebase not configured)');
 
-    try {
-      await Firebase.initializeApp();
-    } catch (e) {
-      // Firebase config is optional at this stage; app continues without FCM.
-      debugPrint('Firebase is not configured yet: $e');
-      return;
-    }
-
-    final messaging = FirebaseMessaging.instance;
-
-    final settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
-    debugPrint('FCM permission: ${settings.authorizationStatus}');
-
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-    FirebaseMessaging.onMessage.listen((message) {
-      _foregroundController.add(_normalizeMessage(message));
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      _tapController.add(_normalizeMessage(message));
-    });
-
-    final initialMessage = await messaging.getInitialMessage();
-    if (initialMessage != null) {
-      _tapController.add(_normalizeMessage(initialMessage));
-    }
-
-    final token = await messaging.getToken();
-    debugPrint('FCM token: $token');
-
-    _initialized = true;
+    // --- Uncomment after running: flutterfire configure ---
+    // try {
+    //   await Firebase.initializeApp();
+    //   final messaging = FirebaseMessaging.instance;
+    //   await messaging.requestPermission(alert: true, badge: true, sound: true);
+    //   FirebaseMessaging.onMessage.listen((msg) {
+    //     _foregroundController.add(_normalize(msg));
+    //   });
+    //   FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+    //     _tapController.add(_normalize(msg));
+    //   });
+    //   final initial = await messaging.getInitialMessage();
+    //   if (initial != null) _tapController.add(_normalize(initial));
+    //   debugPrint('FCM token: ${await messaging.getToken()}');
+    // } catch (e) {
+    //   debugPrint('Firebase init skipped: $e');
+    // }
   }
 
-  Map<String, dynamic> _normalizeMessage(RemoteMessage message) {
-    final data = Map<String, dynamic>.from(message.data);
+  /// Gọi từ bên ngoài (ví dụ: test) để giả lập push notification
+  void simulatePush(Map<String, dynamic> data) {
+    _foregroundController.add(data);
+  }
 
-    data['conversation_id'] ??= data['conversationId'];
-    data['sender_id'] ??= data['senderId'];
-    data['sender_name'] ??= data['senderName'];
-    data['content'] ??= data['text'] ?? message.notification?.body;
-    data['title'] ??= message.notification?.title;
-
-    return data;
+  void dispose() {
+    _foregroundController.close();
+    _tapController.close();
   }
 }
-

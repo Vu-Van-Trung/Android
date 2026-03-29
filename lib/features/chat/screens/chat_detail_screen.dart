@@ -6,7 +6,8 @@ import '../widgets/message_bubble.dart';
 import '../widgets/chat_input_field.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/api_client.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../../../services/socket_service.dart';
+import 'dart:async';
 
 class ChatDetailScreen extends StatefulWidget {
   final Conversation conversation;
@@ -24,7 +25,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isSending = false;
   bool _isLoadingMessages = true;
-  late IO.Socket socket;
+  StreamSubscription? _socketSubscription;
 
   // Lấy User ID từ session ApiClient đã login
   final String myUserId = ApiClient().userId ?? "anonymous"; 
@@ -34,39 +35,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     _messages = List.from(widget.conversation.messages);
-    receiverId = widget.conversation.partner.name; // Lấy tên đối tác làm ID tạm thời để test
+    receiverId = widget.conversation.partner.id;
 
     _loadMessages();
 
-    // 1. Khởi tạo kết nối Socket.IO
-    // Dùng localhost cho Web, 10.0.2.2 cho Android Emulator
-    socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': true,
-    });
-
-    // Bắt sự kiện kết nối thành công
-    socket.onConnect((_) {
-      print('====> KẾT NỐI SOCKET THÀNH CÔNG <====');
-      socket.emit('join', myUserId);
-    });
-
-    // Lắng nghe khi có tin nhắn từ máy khác gửi tới
-    socket.on('receiveMessage', (data) {
+    // Lắng nghe tin nhắn từ SocketStream
+    SocketService().currentChatId = widget.conversation.id;
+    _socketSubscription = SocketService().onMessage.listen((data) {
       if (mounted) {
-        setState(() {
-          _messages.insert(
-            0,
-            Message(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: data['text'],
-              timestamp: DateTime.now(),
-              isSender: false, // Tin nhắn của người khác
-              isRead: true,
-            ),
-          );
-        });
-        _scrollToBottom();
+        // Chỉ append vào UI nếu tin nhắn đích thực thuộc phòng này
+        final convId = data['conversation_id']?.toString();
+        final senderId = (data['sender_id'] ?? data['sender'])?.toString();
+
+        // Ignore socket echo sent by myself and ignore payloads without stable conversation_id.
+        if (senderId == myUserId || convId == null || convId != widget.conversation.id) {
+          return;
+        }
+
+        if (convId == widget.conversation.id) {
+          setState(() {
+            _messages.insert(
+              0,
+              Message(
+                id: data['_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                text: data['text'] ?? data['content'] ?? '',
+                timestamp: DateTime.now(),
+                isSender: false, // Tin nhắn của người khác
+                isRead: true,
+              ),
+            );
+          });
+          _scrollToBottom();
+        }
       }
     });
 
@@ -89,8 +89,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
-    socket.disconnect();
-    socket.dispose();
+    SocketService().currentChatId = null;
+    _socketSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -130,11 +130,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final newMessage = await _chatService.sendMessage(widget.conversation.id, text);
 
     if (newMessage != null && mounted) {
-      // 2. Gửi sự kiện lên Server Node.js (Fallback Socket)
-      socket.emit('sendMessage', {
+      // 2. Gửi sự kiện lên Server Node.js thông qua Global Socket
+      SocketService().sendMessage({
+        'sender_id': myUserId,
         'sender': myUserId,
+        'receiver_id': receiverId,
         'receiver': receiverId,
+        'conversation_id': widget.conversation.id,
         'text': text,
+        'content': text,
       });
 
       setState(() {

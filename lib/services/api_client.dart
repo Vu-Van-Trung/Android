@@ -90,6 +90,33 @@ class ApiClient {
     return await http.delete(uri, headers: _buildHeaders());
   }
 
+  Future<http.Response> putMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    File? file,
+    String? fileField,
+  }) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+    final request = http.MultipartRequest('PUT', uri);
+
+    if (_token != null && _token!.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
+
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
+
+    if (file != null && fileField != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(fileField, file.path),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    return await http.Response.fromStream(streamedResponse);
+  }
+
   Future<bool> checkHealth() async {
     try {
       final response = await get('/health');

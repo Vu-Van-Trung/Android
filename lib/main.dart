@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'screens/login_screen.dart';
 import 'services/settings_service.dart';
 import 'services/api_client.dart';
+import 'services/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +15,7 @@ void main() async {
   
   await SettingsService().init();
   await ApiClient().init();
+  await PushNotificationService().init();
   
   runApp(const MyApp());
 }
@@ -26,13 +29,15 @@ class MyApp extends StatelessWidget {
       listenable: SettingsService(),
       builder: (context, _) {
         final isDarkMode = SettingsService().darkMode;
-        return MaterialApp(
-          title: 'Login App',
-          debugShowCheckedModeBanner: false,
-          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          theme: _buildLightTheme(),
-          darkTheme: _buildDarkTheme(),
-          home: const LoginScreen(),
+        return OverlaySupport.global(
+          child: MaterialApp(
+            title: 'Login App',
+            debugShowCheckedModeBanner: false,
+            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            home: const LoginScreen(),
+          ),
         );
       },
     );

@@ -15,6 +15,7 @@ dependencies:
   google_fonts: ^6.1.0
   image_picker: ^1.2.1
   http: ^1.6.0
+  flutter_launcher_icons: ^0.13.1
   socket_io_client: ^3.1.4
   overlay_support: ^2.1.0
   firebase_core: ^3.15.2
@@ -27,3 +28,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  image_path: "assets/icon.png"
+  android: true
+  ios: true
+

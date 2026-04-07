@@ -1,101 +1,94 @@
-# 📱 Login App
+# 💓 Pulse - The Heartbeat of Chat
 
-Một ứng dụng đăng nhập/đăng ký hiện đại được xây dựng bằng **Flutter**, hỗ trợ xác thực hai lớp (TOTP - Two-Factor Authentication).
-
-## ✨ Tính Năng Chính
-
-- 🔐 **Đăng Nhập**: Giao diện đẹp mắt, dễ sử dụng
-- 📝 **Đăng Ký**: Tạo tài khoản mới
-- 🔑 **Quên Mật Khẩu**: Hỗ trợ khôi phục tài khoản
-- 🛡️ **Xác Thực Hai Lớp (TOTP)**: Bảo mật mạnh mẽ với mã OTP
-- 🎨 **Giao Diện Hiện Đại**: Sử dụng Glass Morphism Design + Gradient backgrounds
-
-## 📂 Cấu Trúc Project
-
-```
-lib/
-├── main.dart                    # Điểm khởi động ứng dụng
-├── models/
-│   └── user.dart              # Model người dùng
-├── screens/
-│   ├── login_screen.dart       # Màn hình đăng nhập
-│   ├── register_screen.dart    # Màn hình đăng ký
-│   ├── forgot_password_screen.dart  # Màn hình quên mật khẩu
-│   ├── totp_setup_screen.dart  # Màn hình cài đặt TOTP
-│   ├── totp_screen.dart        # Màn hình xác thực TOTP
-│   └── success_screen.dart     # Màn hình thành công
-├── services/
-│   └── auth_service.dart       # Dịch vụ xử lý xác thực
-└── widgets/
-    ├── glass_card.dart         # Widget thẻ glass morphism
-    └── gradient_background.dart # Widget nền gradient
-```
-
-## 🚀 Cách Sử Dụng
-
-### 1. **Chuẩn Bị Môi Trường**
-
-Chắc chắn bạn đã cài đặt Flutter:
-```bash
-flutter --version
-```
-
-Nếu chưa, cài đặt tại: https://flutter.dev/docs/get-started/install
-
-### 2. **Clone hoặc Tải Project**
-
-```bash
-cd login_app
-```
-
-### 3. **Cài Đặt Dependencies**
-
-```bash
-flutter pub get
-```
-
-### 4. **Chạy Ứng Dụng**
-
-**Trên Android Emulator/Device:**
-```bash
-flutter run
-```
-
-**Trên iOS Simulator:**
-```bash
-flutter run -d <device-name>
-```
-
-**Trên Web:**
-```bash
-flutter run -d chrome
-```
-
-## 🛠️ Công Nghệ Sử Dụng
-
-- **Flutter**: Framework phát triển ứng dụng di động
-- **Dart**: Ngôn ngữ lập trình
-- **Provider** (nếu sử dụng): Quản lý trạng thái
-- **TOTP**: Xác thực hai lớp
-
-## 📚 Tài Liệu Tham Khảo
-
-- [Flutter Documentation](https://flutter.dev/docs)
-- [Dart Programming Language](https://dart.dev/guides)
-- [Flutter Codelab](https://codelabs.developers.google.com/)
-
-## 💡 Ghi Chú
-
-- Ứng dụng này là một bản demo, chưa kết nối với backend thực
-- Hãy cấu hình API endpoint trong `auth_service.dart` để kết nối với máy chủ của bạn
-
-## 📧 Hỗ Trợ
-
-Nếu bạn gặp vấn đề, hãy kiểm tra:
-1. Flutter được cài đặt đúng
-2. Dependencies được tải đầy đủ (`flutter pub get`)
-3. Emulator/Device kết nối bình thường
+**Pulse** là một ứng dụng nhắn tin thời gian thực hiện đại, được xây dựng bằng **Flutter**. Ứng dụng tập trung vào trải nghiệm người dùng mượt mà, giao diện cao cấp và khả năng giao tiếp tức thời.
 
 ---
 
-**Happy Coding! 🎉**
+## ✨ Tính Năng Chính
+
+### 🔐 Xác Thực & Bảo Mật
+- **Google Sign-In**: Đăng nhập nhanh chóng bằng tài khoản Google.
+- **Email/Password**: Xác thực truyền thống qua Firebase Auth.
+- **User Profile**: Quản lý thông tin cá nhân, cập nhật ảnh đại diện và tiểu sử.
+
+### 💬 Trò Chuyện Thời Gian Thực
+- **Direct Messaging**: Nhắn tin trực tiếp giữa các người dùng thông qua Socket.IO.
+- **Real-time Status**: Thông báo trạng thái tin nhắn đã gửi/đã nhận.
+- **Media Sharing**: Gửi hình ảnh và tệp tin qua tin nhắn.
+
+### 👥 Quản Lý Bạn Bè
+- **Friend Requests**: Gửi và nhận yêu cầu kết bạn.
+- **Real-time Notifications**: Thông báo tức thì khi có yêu cầu kết bạn hoặc tin nhắn mới.
+- **Contact List**: Quản lý danh sách liên lạc thông minh.
+
+### 🎨 Giao Diện & Trải Nghiệm (UI/UX)
+- **Glassmorphism Design**: Phong cách thiết kế kính mờ hiện đại.
+- **Dark/Light Mode**: Hỗ trợ đầy đủ chế độ sáng/tối.
+- **Micro-animations**: Các hiệu ứng chuyển động tinh tế giúp ứng dụng sinh động hơn.
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+- **Frontend**: Flutter (Dart)
+- **Backend API**: FastAPI (Python) & MongoDB
+- **Real-time**: Socket.IO
+- **Auth & Cloud Services**: Firebase (Auth, Cloud Messaging, Firestore)
+- **State Management**: ListenableBuilder / Provider pattern
+- **Storage**: Cloudinary / Local Storage (tùy cấu hình backend)
+
+---
+
+## 📂 Cấu Trúc Thư Mục
+
+```text
+lib/
+├── features/           # Các tính năng chính (Chat, Account, Contacts, Notification)
+├── models/             # Định nghĩa cấu trúc dữ liệu (User, Message, Contact)
+├── services/           # Xử lý Logic (API Client, Socket, Auth, Push Notification)
+├── screens/            # Giao diện chính của ứng dụng
+├── widgets/            # Các thành phần giao diện dùng chung (Button, Card, Input)
+└── main.dart           # Điểm khởi đầu & Cấu hình Theme
+```
+
+---
+
+## 🚀 Hướng Dẫn Cài Đặt
+
+### 1. Yêu Cầu Hệ Thống
+- Flutter SDK: `>=3.0.0`
+- Dart SDK: `>=3.0.0`
+
+### 2. Cấu Hình Firebase
+1. Tạo một project trên [Firebase Console](https://console.firebase.google.com/).
+2. Thêm ứng dụng Android/iOS.
+3. Tải file `google-services.json` (Android) hoặc `GoogleService-Info.plist` (iOS) và đặt vào thư mục tương ứng.
+4. Chạy lệnh: `flutterfire configure`.
+
+### 3. Cấu Hình Backend
+Đảm bảo bạn đã có backend chạy tại địa chỉ được cấu hình trong `lib/services/api_client.dart`:
+```dart
+static const String baseUrl = 'http://YOUR_API_IP:8000';
+```
+
+### 4. Chạy Ứng Dụng
+```bash
+# Lấy các gói phụ thuộc
+flutter pub get
+
+# Chạy project
+flutter run
+```
+
+---
+
+## 💡 Ghi Chú
+- Hiện tại dự án đang được kết nối với Backend nội bộ qua IP tĩnh. Hãy đảm bảo máy ảo hoặc thiết bị thực của bạn có thể truy cập được địa chỉ IP này.
+- Project sử dụng `Overlay Support` để hiển thị thông báo in-app.
+
+---
+
+## 📧 Liên Hệ
+Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ qua email hoặc tạo một Issue trong repository này.
+
+**Happy Chatting! 🚀**

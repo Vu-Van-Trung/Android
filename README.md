@@ -31,11 +31,11 @@
 ## 🛠️ Công Nghệ Sử Dụng
 
 - **Frontend**: Flutter (Dart)
-- **Backend API**: FastAPI (Python) & MongoDB
-- **Real-time**: Socket.IO
+- **Backend API**: Firebase
+- **Real-time**: Realtime Database
 - **Auth & Cloud Services**: Firebase (Auth, Cloud Messaging, Firestore)
 - **State Management**: ListenableBuilder / Provider pattern
-- **Storage**: Cloudinary / Local Storage (tùy cấu hình backend)
+- **Storage**: Firebase Storage.
 
 ---
 
